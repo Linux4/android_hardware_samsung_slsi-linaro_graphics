@@ -25,6 +25,8 @@ class ExynosPrimaryDisplayFbInterfaceModule : public ExynosPrimaryDisplayFbInter
         ExynosPrimaryDisplayFbInterfaceModule(ExynosDisplay *exynosDisplay);
         virtual ~ExynosPrimaryDisplayFbInterfaceModule();
         virtual decon_idma_type getDeconDMAType(ExynosMPP *otfMPP);
+        virtual void getDisplayConfigsFromDPU() override;
+        virtual int32_t setActiveConfig(hwc2_config_t config) override;
 };
 
 class ExynosExternalDisplayFbInterfaceModule : public ExynosExternalDisplayFbInterface {
