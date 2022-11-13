@@ -64,23 +64,19 @@ ExynosPrimaryDisplay::ExynosPrimaryDisplay(uint32_t index, ExynosDevice *device)
 #endif
 
 #if defined(MAX_BRIGHTNESS_NODE_BASE) && defined(BRIGHTNESS_NODE_BASE)
-    FILE *maxBrightnessFd = fopen(MAX_BRIGHTNESS_NODE_BASE, "r");
     ALOGI("Trying %s open for get max brightness", MAX_BRIGHTNESS_NODE_BASE);
+    std::ifstream ifsMaxBrightness(MAX_BRIGHTNESS_NODE_BASE);
 
-    if (maxBrightnessFd != NULL) {
-
-        char val[4];
-        size_t size;
-        size = fread(&val, 4, 1, maxBrightnessFd);
-        mMaxBrightness = atoi(val);
+    if (!ifsMaxBrightness.fail()) {
+        ifsMaxBrightness >> mMaxBrightness;
         ALOGI("Max brightness : %d", mMaxBrightness);
 
-        fclose(maxBrightnessFd);
+        ifsMaxBrightness.close();
 
-        mBrightnessFd = fopen(BRIGHTNESS_NODE_BASE, "w+");
         ALOGI("Trying %s open for brightness control", BRIGHTNESS_NODE_BASE);
+        mBrightnessOfs.open(BRIGHTNESS_NODE_BASE, std::ofstream::out);
 
-        if (mBrightnessFd == NULL)
+        if (mBrightnessOfs.fail())
             ALOGI("%s open failed! %s", BRIGHTNESS_NODE_BASE, strerror(errno));
 
     } else {
@@ -97,9 +93,8 @@ ExynosPrimaryDisplay::~ExynosPrimaryDisplay()
         mHiberState.hiberExitFd = NULL;
     }
 
-    if (mBrightnessFd != NULL) {
-        fclose(mBrightnessFd);
-        mBrightnessFd = NULL;
+    if (mBrightnessOfs.is_open()) {
+        mBrightnessOfs.close();
     }
 }
 

@@ -327,7 +327,6 @@ ExynosDisplay::ExynosDisplay(uint32_t index, ExynosDevice *device)
     mDeviceYres(0),
     mColorMode(HAL_COLOR_MODE_NATIVE),
     mNeedSkipPresent(false),
-    mBrightnessFd(NULL),
     mMaxBrightness(0),
     mDisplayInterface(NULL)
 {
@@ -3088,7 +3087,7 @@ int32_t ExynosDisplay::getDisplayCapabilities(uint32_t* outNumCapabilities,
 
     uint32_t capabilityNum = 0;
 
-    if (mBrightnessFd != NULL)
+    if (mBrightnessOfs.is_open())
         capabilityNum++;
 
 #ifdef USES_DOZEMODE
@@ -3106,7 +3105,7 @@ int32_t ExynosDisplay::getDisplayCapabilities(uint32_t* outNumCapabilities,
 
     uint32_t index = 0;
 
-    if (mBrightnessFd != NULL)
+    if (mBrightnessOfs.is_open())
         outCapabilities[index++] = HWC2_DISPLAY_CAPABILITY_BRIGHTNESS;
 
 #ifdef USES_DOZEMODE
@@ -3118,7 +3117,7 @@ int32_t ExynosDisplay::getDisplayCapabilities(uint32_t* outNumCapabilities,
 
 int32_t ExynosDisplay::getDisplayBrightnessSupport(bool* outSupport)
 {
-    if (mBrightnessFd == NULL) {
+    if (!mBrightnessOfs.is_open()) {
         *outSupport = false;
     } else {
         *outSupport = true;
@@ -3129,18 +3128,17 @@ int32_t ExynosDisplay::getDisplayBrightnessSupport(bool* outSupport)
 
 int32_t ExynosDisplay::setDisplayBrightness(float brightness)
 {
-    if (mBrightnessFd == NULL)
+    if (!mBrightnessOfs.is_open())
         return HWC2_ERROR_UNSUPPORTED;
 
-    char val[4];
     uint32_t scaledBrightness = brightness * mMaxBrightness;
 
-    sprintf(val, "%d", scaledBrightness);
-    uint32_t res = fwrite(val, 4, 1, mBrightnessFd);
-    if(res == 0){
+    mBrightnessOfs.seekp(std::ios_base::beg);
+    mBrightnessOfs << std::to_string(scaledBrightness);
+    mBrightnessOfs.flush();
+    if(mBrightnessOfs.fail()){
         ALOGE("brightness write failed.");
     }
-    rewind(mBrightnessFd);
 
     return HWC2_ERROR_NONE;
 }
