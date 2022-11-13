@@ -102,7 +102,7 @@ class ExynosPrimaryDisplayFbInterface: public ExynosDisplayFbInterface {
         virtual void init(ExynosDisplay *exynosDisplay);
         virtual int32_t setPowerMode(int32_t mode);
         void getDisplayHWInfo();
-        void getDisplayConfigsFromDPU();
+        virtual void getDisplayConfigsFromDPU();
     protected:
         ExynosPrimaryDisplay *mPrimaryDisplay;
 };
