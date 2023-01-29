@@ -19,19 +19,17 @@
 #ifndef ___SAMSUNG_DECON_H__
 #define ___SAMSUNG_DECON_H__
 #include "DeconCommonHeader.h"
-#define S3C_FB_MAX_WIN (6)
+#define S3C_FB_MAX_WIN (5)
 #define MAX_DECON_WIN (6)
 #define DECON_WIN_UPDATE_IDX MAX_DECON_WIN
 #define MAX_PLANE_CNT (3)
 #define SUCCESS_EXYNOS_SMC 0
-#define HDR_CAPABILITIES_NUM 4
 typedef unsigned int u32;
 #ifdef USES_ARCH_ARM64
 typedef uint64_t dma_addr_t;
 #else
 typedef uint32_t dma_addr_t;
 #endif
-#define CHIP_VER (9820)
 #define MAX_RES_NUMBER 5
 #define MAX_FMT_CNT 64
 #define MAX_DPP_CNT 7
@@ -104,9 +102,8 @@ struct decon_win_config {
       int fd_idma[3];
       int acq_fence;
       int rel_fence;
-      int plane_alpha;
       enum decon_blending blending;
-      enum decon_idma_type idma_type;
+      u32 channel;
       enum decon_pixel_format format;
       struct dpp_params dpp_parm;
       struct decon_win_rect block_area;
@@ -118,11 +115,14 @@ struct decon_win_config {
   struct decon_frame dst;
   bool protection;
   bool compression;
+  int plane_alpha;
 };
 struct decon_win_config_data {
-  int retire_fence;
-  int fd_odma;
-  struct decon_win_config config[MAX_DECON_WIN + 1];
+  int	retire_fence;
+  int	fd_odma;
+  u32	fps;
+  struct decon_win_config config[MAX_DECON_WIN + 2];
+  struct decon_win_config_extra extra;
 };
 struct decon_disp_info {
   enum hwc_ver ver;
