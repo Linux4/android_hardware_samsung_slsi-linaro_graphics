@@ -103,7 +103,7 @@ struct decon_win_config {
       int acq_fence;
       int rel_fence;
       enum decon_blending blending;
-      u32 channel;
+      enum decon_idma_type idma_type;
       enum decon_pixel_format format;
       struct dpp_params dpp_parm;
       struct decon_win_rect block_area;
