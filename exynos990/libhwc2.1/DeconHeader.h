@@ -117,6 +117,10 @@ struct decon_win_config {
   bool compression;
   int plane_alpha;
 };
+struct decon_win_config_extra {
+	int remained_frames;
+	u32 reserved[7];
+};
 struct decon_win_config_data {
   int	retire_fence;
   int	fd_odma;
