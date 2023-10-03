@@ -42,6 +42,20 @@ const size_t NUM_HW_WINDOWS = MAX_DECON_WIN;
 #ifndef DECON_WIN_UPDATE_IDX
 #define DECON_WIN_UPDATE_IDX (-1)
 #endif
+
+#define PANEL_DISPLAY_MODE_1440x3200_60NS     0
+#define PANEL_DISPLAY_MODE_1440x3200_48NS     1
+#define PANEL_DISPLAY_MODE_1080x2400_120HS    2
+#define PANEL_DISPLAY_MODE_1080x2400_96HS     3
+#define PANEL_DISPLAY_MODE_1080x2400_60HS     4
+#define PANEL_DISPLAY_MODE_1080x2400_60NS     5
+#define PANEL_DISPLAY_MODE_1080x2400_48NS     6
+#define PANEL_DISPLAY_MODE_720x1600_120HS     7
+#define PANEL_DISPLAY_MODE_720x1600_96HS      8
+#define PANEL_DISPLAY_MODE_720x1600_60HS      9
+#define PANEL_DISPLAY_MODE_720x1600_60NS     10
+#define PANEL_DISPLAY_MODE_720x1600_48NS     11
+
 //////////////////////////////////////////////////// ExynosDisplayFbInterface //////////////////////////////////////////////////////////////////
 ExynosDisplayFbInterface::ExynosDisplayFbInterface()
     : mDisplayFd(-1), mXres(0), mYres(0), mDSCHSliceNum(0), mDSCYSliceSize(0) {
@@ -168,7 +182,42 @@ int32_t ExynosDisplayFbInterface::setActiveConfig(hwc2_config_t config,
     struct decon_win_config *win_config = win_data.config;
     memset(&win_data, 0, sizeof(win_data));
 
-    win_config[DECON_WIN_UPDATE_IDX].state = decon_win_config::DECON_WIN_STATE_MRESOL;
+    ALOGI("DARIO current  config is : %dx%d ", mXres, mYres);
+    ALOGI("DARIO requested: (win_config %d) : %dx%d, fps:%d group: %d", config,
+               displayConfig.width,
+               displayConfig.height, (int)(1000000000 / displayConfig.vsyncPeriod), displayConfig.groupId);
+
+    if (mXres != displayConfig.width && mYres != displayConfig.height && displayConfig.height) {
+        /* First switch to 60 fps normalmode as is the only mode which can do resolution switch */
+        ALOGI("DARIO requested a resolution switch, switching first FPS to normal mode using current res");
+        win_config[DECON_WIN_UPDATE_IDX].state = decon_win_config::DECON_WIN_STATE_VRR_NORMALMODE;
+        win_config[DECON_WIN_UPDATE_IDX].dst.f_w = mXres;
+        win_config[DECON_WIN_UPDATE_IDX].dst.f_h = mYres;
+        win_config[DECON_WIN_UPDATE_IDX].plane_alpha = (int)(60);
+        win_data.fps = (int)(60);
+
+        ret = ioctl(mDisplayFd, S3CFB_WIN_CONFIG, &win_data);
+
+        if (ret < 0) {
+            ALOGE("%s DARIO S3CFB_WIN_CONFIG failed errno : %d, ret: %d", __func__, errno, ret);
+        }
+    }
+
+    ALOGI("DARIO switching to requested confog: (win_config %d) : %dx%d, fps:%d group: %d", config,
+               displayConfig.width,
+               displayConfig.height, (int)(1000000000 / displayConfig.vsyncPeriod), displayConfig.groupId);
+        /* set state according to what has been requested */
+    if (config == PANEL_DISPLAY_MODE_1440x3200_60NS || config == PANEL_DISPLAY_MODE_1440x3200_48NS ||
+        config == PANEL_DISPLAY_MODE_1080x2400_60NS || config == PANEL_DISPLAY_MODE_1080x2400_48NS ||
+        config == PANEL_DISPLAY_MODE_720x1600_60NS || config == PANEL_DISPLAY_MODE_720x1600_48NS ) {
+            ALOGI("DARIO requested a resolution switch, switching first FPS to normal mode using current res");
+            win_config[DECON_WIN_UPDATE_IDX].state = decon_win_config::DECON_WIN_STATE_VRR_NORMALMODE;
+    } else {
+        ALOGI("DARIO to switch to fast mode");
+		win_config[DECON_WIN_UPDATE_IDX].state = decon_win_config::DECON_WIN_STATE_VRR_HSMODE;
+    }
+
+    /* Update FPS */
     win_config[DECON_WIN_UPDATE_IDX].dst.f_w = displayConfig.width;
     win_config[DECON_WIN_UPDATE_IDX].dst.f_h = displayConfig.height;
     win_config[DECON_WIN_UPDATE_IDX].plane_alpha = (int)(1000000000 / displayConfig.vsyncPeriod);

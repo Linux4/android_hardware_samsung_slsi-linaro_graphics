@@ -97,6 +97,8 @@ struct decon_win_config {
     DECON_WIN_STATE_UPDATE,
     DECON_WIN_STATE_CURSOR,
     DECON_WIN_STATE_MRESOL = 0x10000,
+    DECON_WIN_STATE_VRR_NORMALMODE= 0x20000,
+    DECON_WIN_STATE_VRR_HSMODE = 0x20001,
   } state;
   union {
     __u32 color;
